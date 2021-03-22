@@ -15,6 +15,7 @@ sys.path.insert(0, '/Users/z5278074/OneDrive - UNSW/AxionSimulations/PQsim/Scrip
 from Spatial import Laplacian_2D, Laplacian_3D, Gradient_2D
 from StringID import cores_pi, cores_std,histo_std
 from Plot import TwilightPlot,Snap_Save,FourierPlot,RdBuPlot,BinaryPlot
+from Plot3D import print_plaqs,plaq_coord, String_Plot
 from Init import init_noise, kernels
 from Input import *
 
@@ -123,7 +124,14 @@ for tstep in range(0,final_step):
     # 3D
 #    fig_axion_projected,ax_axion_projected = TwilightPlot(axion_field[0:,0:,z_slice],t_evol)
 #    Snap_Save(fig_axion_projected,tstep,mov_dir3D)
-
+#   # 3D full plot
+#    Nchecks = 40
+#    to_plot = arange(0,final_step,int(final_step/Nchecks))
+#    if tstep in to_plot:
+#        num=print_plaqs(axion,N,1,tstep)
+#        X,Y,Z = plaq_coord(N,tstep)
+#        fig,ax = String_Plot(t_evol,X,Y,Z)
+#        Snap_Save(fig,tstep,mov_dir3D)
     
 ############################################################################
 # CLOSE OUTPUT FILES - uncomment to use
