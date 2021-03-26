@@ -90,51 +90,61 @@ def cores_pi2v2(f,N,thr):
 # Pi method in 3D
 ##################################################################
 
-# TO FINISH 
 @njit
 def plaq_pi(f,N,thr):
-    s=[]
+    s = []
     count = 0
     accept = 0.5 - 0.5*thr/100
     for i in range(N-1):
         for j in range(N-1):
             for k in range(N-1):
-                norm1a = (f[i][j][k]+pi)/(2*pi)
+                norm1a = (f[i][j][k]+pi)/(2*pi)          # (i,j) plane
                 norm2a = (f[i+1][j][k]+pi)/(2*pi)
                 norm3a = (f[i+1][j+1][k]+pi)/(2*pi)
                 norm4a = (f[i][j+1][k]+pi)/(2*pi)
-                # TO COMPLETE HERE
-#                norm1b = (f[][][]+pi)/(2*pi)
-#                norm2b = (f[][][]+pi)/(2*pi)
-#                norm3b = (f[][][]+pi)/(2*pi)
-#                norm4b = (f[][][]+pi)/(2*pi)
-#                norm1c = (f[][][]+pi)/(2*pi)
-#                norm2c = (f[][][]+pi)/(2*pi)
-#                norm3c = (f[][][]+pi)/(2*pi)
-#                norm4c = (f[][][]+pi)/(2*pi)
-            theta1a = min(abs(norm2a-norm1a),1-abs(norm2a-norm1a))
-            theta2a = min(abs(norm3a-norm2a),1-abs(norm3a-norm2a))
-            theta3a = min(abs(norm4a-norm3a),1-abs(norm4a-norm3a))
-#            theta1b = min(abs(norm2b-norm1b),1-abs(norm2b-norm1b))
-#            theta2b = min(abs(norm3b-norm2b),1-abs(norm3b-norm2b))
-#            theta3b = min(abs(norm4b-norm3b),1-abs(norm4b-norm3b))
-#            theta1c = min(abs(norm2c-norm1c),1-abs(norm2c-norm1c))
-#            theta2c = min(abs(norm3c-norm2c),1-abs(norm3c-norm2c))
-#            theta3c = min(abs(norm4c-norm3c),1-abs(norm4c-norm3c))
-            theta_sum_a = theta1a + theta2a + theta3a
-#            theta_sum_b = theta1b + theta2b + theta3b
-#            theta_sum_c = theta1c + theta2c + theta3c
-            if (theta_sum_a or theta_sum_b or theta_sum_c) > accept:
-                s.append([i,j,k])
+
+                norm1b = (f[i][j][k]+pi)/(2*pi)          # (i,k) plane 
+                norm2b = (f[i+1][j][k]+pi)/(2*pi)
+                norm3b = (f[i+1][j][k+1]+pi)/(2*pi)
+                norm4b = (f[i][j][k+1]+pi)/(2*pi)
+
+                norm1c = (f[i][j][k]+pi)/(2*pi)             # (j,k) plane
+                norm2c = (f[i][j+1][k]+pi)/(2*pi)
+                norm3c = (f[i][j+1][k+1]+pi)/(2*pi)
+                norm4c = (f[i][j][k+1]+pi)/(2*pi)
+
+                theta1a = min(abs(norm2a-norm1a),1-abs(norm2a-norm1a))
+                theta2a = min(abs(norm3a-norm2a),1-abs(norm3a-norm2a))
+                theta3a = min(abs(norm4a-norm3a),1-abs(norm4a-norm3a))
+            
+                theta1b = min(abs(norm2b-norm1b),1-abs(norm2b-norm1b))
+                theta2b = min(abs(norm3b-norm2b),1-abs(norm3b-norm2b))
+                theta3b = min(abs(norm4b-norm3b),1-abs(norm4b-norm3b))
+            
+                theta1c = min(abs(norm2c-norm1c),1-abs(norm2c-norm1c))
+                theta2c = min(abs(norm3c-norm2c),1-abs(norm3c-norm2c))
+                theta3c = min(abs(norm4c-norm3c),1-abs(norm4c-norm3c))
+
+                theta_sum_a = theta1a + theta2a + theta3a
+                theta_sum_b = theta1b + theta2b + theta3b
+                theta_sum_c = theta1c + theta2c + theta3c
+
+                if (theta_sum_a or theta_sum_b or theta_sum_c) > accept:
+                    s.append([i,j,k])
+    
     for a in range(0,len(s)-1):
-        diff_y=s[a+1][1]-s[a][1]
-        diff_x=s[a+1][0]-s[a][0]
-        if (diff_y == 0 and diff_x == 1):
+        diff_z = abs(s[a+1][2] - s[a][2])
+        diff_y = abs(s[a+1][1] - s[a][1])
+        diff_x = abs(s[a+1][0] - s[a][0])
+        
+        if (diff_z == 0 and diff_y == 0 and diff_x == 1):
             count+=1
-        if (diff_y == 1 and diff_x == 0):
+        if (diff_z == 0 and diff_y == 1 and diff_x == 0):
+            count+=1
+        if (diff_z == 1 and diff_y == 0 and diff_x == 0):
             count+=1
     num=len(s)-count
-    return num
+    return num*2.0/3.0 # Contains statistical count factor from Moore paper (arXiv:1509.00026)
 
 ##################################################################
 # 3D version of pi/2 method 
@@ -242,4 +252,6 @@ def draw(f,N,index,size_x=13,size_y=12):
     plt.scatter(x_coord,y_coord,c=y_coord,cmap=cm.viridis,lw=1)
     ax.set_title(r'$\hat{\tau} = %d$' % index)
     return fig,ax
+
+
 
