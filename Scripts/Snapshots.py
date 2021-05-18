@@ -240,7 +240,7 @@ def Print_Snapshots(f_axion = True, f_saxion = False, f_double = False, f_3dstri
 
         locs = PlaqSave(axion,1)
         fig4, ax4 = StringSnapshot(locs,t_evol,N)
-        Snap_Save(fig3,tstep,mov_dir_3ds)
+        Snap_Save(fig4,tstep,mov_dir_3ds)
 
 
 def Print_Histogram(field, f_histo = False):
