@@ -62,7 +62,7 @@ for tstep in range(final_step):
     saxion = saxionize(phi1,phi2)
 
 
-Print_Snapshots(f_axion = False,f_saxion = False, f_double = True, f_3dstrings = False)  
+Print_Snapshots(f_axion = True,f_saxion = False, f_double = False, f_3dstrings = False)  
 
 
 
