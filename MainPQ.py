@@ -11,14 +11,6 @@ import sys
 
 sys.path.insert(0, './Scripts')
 
-mov_dir_ax = './Snapshots/Axion/' 
-mov_dir_sax = './Snapshots/Saxion/' 
-mov_dir_double = './Snapshots/Double/' 
-mov_dir_3ds = './Snapshots/Strings/' 
-mov_dir_histo = './Snapshots/Histo/' 
-mov_dir_ps1 = './Snapshots/PS/' 
-mov_dir_ps2 = './Snapshots/PS_Double' 
-
 from Input import *
 from Utils import *
 from Snapshots import * 
@@ -52,17 +44,35 @@ for tstep in range(final_step):
     K1 = 1.0*K1_next
     K2 = 1.0*K2_next
     
-    kappa = np.log(t_evol/ms) 
-    R = t_evol/(ms*L) 
-    time = t0*(R/R0*ms)**2.0 
+    if analyse_strings: 
+        
+        to_analsye = np.arange(0,final_step,string_checks)
 
-#    PHI = phi1 + 1j * phi2
-#    PHIDOT = phidot1 +1j * phidot2
+        kappa = np.log(t_evol/ms) 
+        #R = t_evol/(ms*L)
+        #time = t0*(R/R0*ms)**2.0 
+
+        PHI = phi1 + 1j * phi2
+        PHIDOT = phidot1 +1j * phidot2
+        axion = axionize(phi1,phi2)
+        saxion = saxionize(phi1,phi2)
+
+    if analyse_spectrum:
+
+        to_analsye = np.arange(0,final_step,number_checks)
+
+
+#========================================================
+# FINAL RESULT 
+
+if print_snapshot_final:
     axion = axionize(phi1,phi2)
     saxion = saxionize(phi1,phi2)
-
-
-Print_Snapshots(f_axion = True,f_saxion = False, f_double = False, f_3dstrings = False)  
-
-
+    Print_Snapshots2D(f_axion,f_saxion,f_double)
+    if f_3dstrings:
+        if NDIMS == 2:
+            pass
+        if NDIMS == 3:
+            locs = PlaqSave(axion,1)
+            Print_3Dstrings(locs,axion,t_evol,tstep)
 
