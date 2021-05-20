@@ -1,4 +1,4 @@
-import numpy as np
+from numpy import *
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import pandas as pd
@@ -9,27 +9,28 @@ from scipy.fft import fft, ifft, fft2,fftshift
 from random import randrange
 import sys
 
-sys.path.insert(0, './Scripts')
+sys.path.insert(0, './Scripts/') 
 
 from Input import *
-from Utils import *
-from Snapshots import * 
-from StringID import Cores2D,Cores3D, PlaqSave,CoresAppend
+from Utils2 import *
+from Snapshots2 import * 
+from StringID2 import Cores2D,Cores3D, PlaqSave,CoresAppend
+
+if analyse_strings:
+    string_print = open('./Output/Strings/String_scaling.txt', 'w+')
 
 if Potential == 'Mexican':
     phi1,phi2,phidot1,phidot2 = IC_Mexican(N)
 
 if Potential == 'Thermal':
-    phi1,phi2,phidot1,phidot2 = IC_Thermal(L,N,T0,meffsquared,flag_normalize = True)
+    phi1,phi2,phidot1,phidot2 = IC_Thermal(L,1/Delta,meffsquared,T0,N,flag_normalize=False)
+
 
 K1 = Laplacian(phi1,dx) + Potential1(phi1,phi2,phidot1,t_evol)
 K2 = Laplacian(phi2,dx) + Potential2(phi1,phi2,phidot2,t_evol)
 
-final_step = light_time-int(1/DeltaRatio)+1
-
-
-for tstep in range(final_step):
-
+for tstep in range(0,final_step):
+    
     phi1 = PhiSum(phi1,phidot1,K1,dtau)
     phi2 = PhiSum(phi2,phidot2,K2,dtau)
 
@@ -43,27 +44,50 @@ for tstep in range(final_step):
 
     K1 = 1.0*K1_next
     K2 = 1.0*K2_next
+
+    #------------------------------------------------------------------------------
+    # ANALYSIS 
+    #------------------------------------------------------------------------------
     
     if analyse_strings: 
         
         to_analsye = np.arange(0,final_step,string_checks)
 
-        kappa = np.log(t_evol/ms) 
-        #R = t_evol/(ms*L)
-        #time = t0*(R/R0*ms)**2.0 
+        if tstep in to_analsye:
+            
+            time_x = Time_Variable(t_evol)
+            axion = axionize(phi1,phi2)
 
-        PHI = phi1 + 1j * phi2
-        PHIDOT = phidot1 +1j * phidot2
-        axion = axionize(phi1,phi2)
-        saxion = saxionize(phi1,phi2)
+            if NDIMS == 2:
+
+                R = t_evol/(ms*L)
+                time = t0*(R/R0*ms)**2.0     
+                num_cores = Cores2D(axion,thr)
+                xi = num_cores*time**2/(t_evol**2)
+                string_print.write('%f %f \n' % (time_x,xi))
+
+            if NDIMS ==3:
+
+                R = t_evol/(ms*L)
+                time = t0*(R/R0*ms)**2.0
+                num_cores = Cores3D(axion,thr)
+                xi = num_cores*time**2/(t_evol**3)
+                string_print.write('%f %f \n' % (time_x,xi))
 
     if analyse_spectrum:
 
         to_analsye = np.arange(0,final_step,number_checks)
+        PHI = phi1 + 1j * phi2
+        PHIDOT = phidot1 +1j * phidot2
+        axion = axionize(phi1,phi2)
 
 
-#========================================================
+if analyse_strings:
+    string_print.close()
+
+#------------------------------------------------------------------------------
 # FINAL RESULT 
+#------------------------------------------------------------------------------
 
 if print_snapshot_final:
     axion = axionize(phi1,phi2)
@@ -75,4 +99,3 @@ if print_snapshot_final:
         if NDIMS == 3:
             locs = PlaqSave(axion,1)
             Print_3Dstrings(locs,axion,t_evol,tstep)
-
