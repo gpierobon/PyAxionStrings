@@ -10,10 +10,10 @@ from numpy import random
 from Input import * 
 
 
+
 # ===================================================================
 # GRID SETUP 
 # ===================================================================
-
 
 Mpl = 2.4*10**18.0/fa_phys # Normalized to fa_phys chosen 
 fa = 1 # In fa units
@@ -22,22 +22,45 @@ L = Delta*N # Comoving
 Delta_tau = DeltaRatio*Delta
 H1 = fa/Delta
 
-
 dx = ms*Delta 
 dtau = ms*Delta_tau
-t_evol = dtau/DeltaRatio - dtau 
+t_evol = dtau/DeltaRatio - dtau # Such that in the first loop iteration, t_evol = 1 
 light_time = int(0.5*N/DeltaRatio)
 gstar = 106.75
-T0 = np.sqrt(Mpl*90.0/(gstar*np.pi*np.pi)) 
+T0 = np.sqrt(Mpl*90.0/(gstar*np.pi*np.pi)) # In units of fa
 R0 = Delta*ms/(ms*L)
 t0 = Delta/(2*L*ms**2.0)
-meffsquared = lambdaPRS*(T0**2.0/3.0-fa**2)
+meffsquared = lambdaPRS**2.0*(T0**2.0/3.0-1)
+final_step = light_time-int(1/DeltaRatio)+1
 
+# ===================================================================
+# TIME VARIABLES
+# ===================================================================
+
+def Time_Variable(t_evol):
+
+    if time_var == 'String tension':
+
+        temp = np.log(t_evol/ms) 
+
+    if time_var == 'Conformal time':
+
+        temp = t_evol
+
+    if time_var == 'Cosmic time':
+        
+        R = t_evol/(ms*L)
+        temp = t0*(R/R0*ms)**2.0 
+
+    if time_var == 'Scale factor':
+
+        temp = t_evol/(ms*L)
+
+    return temp
 
 # ===================================================================
 # INITIAL CONDITIONS - MEXICAN HAT POTENTIAL ZERO T
 # ===================================================================
-
 
 def IC_Mexican(N,single_precision = False):
     
@@ -87,14 +110,13 @@ def IC_Mexican(N,single_precision = False):
 # INITIAL CONDITIONS - THERMAL POTENTIAL
 # ===================================================================
 
-
 def fftind(N):
     k_ind = np.mgrid[:N, :N] - int( (N + 1)/2 )
     k_ind = scipy.fftpack.fftshift(k_ind)
     return(k_ind)
 
 
-def IC_Thermal(L,N,T0,meffsquared,flag_normalize = True,single_precision = False):
+def IC_Thermal(L,k_scale,meffsquared,T0,N,flag_normalize = True):
     
     k_idx = fftind(N)
 
@@ -106,12 +128,7 @@ def IC_Thermal(L,N,T0,meffsquared,flag_normalize = True,single_precision = False
     
     if NDIMS == 2:
         
-        noise = np.random.normal(size = (N, N)) + 1j*np.random.normal(size = (N,N))
-
-        if single_precision:
-            
-            noise = noise.astype('float32')    
-        
+        noise = random.normal(size = (N, N)) + 1j*random.normal(size = (N,N))    
         gfield1 = scipy.fft.ifft2(noise*amplitude).real
         gfield2 = scipy.fft.ifft2(noise*amplitude).imag
 
@@ -140,12 +157,7 @@ def IC_Thermal(L,N,T0,meffsquared,flag_normalize = True,single_precision = False
     
     if NDIMS == 3:
         
-        noise = np.random.normal(size = (N,N,N)) + 1j*np.random.normal(size = (N,N,N))
-
-        if single_precision:
-
-            noise = noise.astype('float32') 
-        
+        noise = random.normal(size = (N,N,N)) + 1j*random.normal(size = (N,N,N))
         gfield1 = scipy.fft.ifftn(noise*amplitude).real
         gfield2 = scipy.fft.ifftn(noise*amplitude).imag
 
@@ -175,6 +187,7 @@ def IC_Thermal(L,N,T0,meffsquared,flag_normalize = True,single_precision = False
 
     return gfield1,gfield2,gfield1_dot,gfield2_dot
 
+
 # ===================================================================
 # PARALLEL FUNCTIONS 
 # ===================================================================
@@ -187,8 +200,21 @@ def saxionize(phi1,phi2):
 def axionize(phi1,phi2):
     return np.arctan2(phi1,phi2)
 
-@njit(parallel=True,nogil=True)
+# @njit(fastmath=True,parallel=True)
+# def Potential1(phi1,phi2,phidot1,t_evol):
+#     kernel1 = np.zeros_like(phi1)
+#     kernel1 =  -2*(Era/t_evol)*phidot1-lambdaPRS*phi1*(phi1**2+phi2**2 -1 + (T0/L)**2/(3.0*t_evol**2))
+#     return kernel1
+
+# @njit(fastmath=True,parallel=True)
+# def Potential2(phi1,phi2,phidot2,t_evol):
+#     kernel2 = np.zeros_like(phi1)
+#     kernel2 =  -2*(Era/t_evol)*phidot2-lambdaPRS*phi2*(phi1**2+phi2**2 -1 + (T0/L)**2/(3.0*t_evol**2))
+#     return kernel2
+
+@njit(parallel=True,fastmath=True)
 def Potential1(phi1,phi2,phidot1,t_evol):
+
     kernel1 = np.zeros_like(phi1)
     
     if Potential == 'Mexican':
@@ -201,8 +227,9 @@ def Potential1(phi1,phi2,phidot1,t_evol):
     
     return kernel1
 
-@njit(parallel=True,nogil=True)
+@njit(parallel=True,fastmath=True)
 def Potential2(phi1,phi2,phidot2,t_evol):
+    
     kernel2 = np.zeros_like(phi1)
 
     if Potential == 'Mexican':
@@ -224,11 +251,6 @@ def PhiSum(phi,phidot,K,dtau):
 def PhidotSum(phidot,K,K_next,dtau):
     phidot += 0.5*(K+ K_next)*dtau
     return phidot
-
-
-# ===================================================================
-# FINITE DIFFERENCE SPATIAL DERIVATIVES 
-# ===================================================================
 
 
 @njit(nogil=True,parallel=True,fastmath=True)
@@ -297,39 +319,6 @@ def Gradient(phi,dx):
     return dphi
 
 
-# ===================================================================
-# POWER SPECTRUM 
-# ===================================================================
-
-
-def PS(f,N,L):
-    y = fftn(f)
-    P = np.abs(y)**2
-    kfreq = fftfreq(N)*N 
-    
-    if NDIMS == 2:
-
-        kfreq2D = np.meshgrid(kfreq, kfreq)
-        K = np.sqrt(kfreq2D[0]**2 + kfreq2D[1]**2)
-        K = K.flatten()
-        P = P.flatten()
-        kbins = np.arange(0.5, N//2, 1.)
-        kvals = 0.5 * (kbins[1:] + kbins[:-1])
-        Pk, a, b = stats.binned_statistic(K, P, statistic = "mean", bins = kbins)
-        Pk *= pi * (kbins[1:]**2 - kbins[:-1]**2)
-
-    if NDIMS == 3:
-        
-        kfreq3D = np.meshgrid(kfreq, kfreq, kfreq)
-        K = np.sqrt(kfreq3D[0]**2 + kfreq3D[1]**2 + kfreq3D[2]**2) 
-        K = K.flatten()
-        P = P.flatten()
-        kbins = np.arange(0.5, N//2, 1.)
-        kvals = 0.5 * (kbins[1:] + kbins[:-1])
-        Pk, a, b = stats.binned_statistic(K, P, statistic = "mean", bins = kbins)
-        Pk *= 4/3 * np.pi * (kbins[1:]**3 - kbins[:-1]**3)
-    
-    return kvals*2*np.pi/L,Pk/(2*np.pi*L)**2
 
 
 
