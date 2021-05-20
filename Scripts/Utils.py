@@ -128,7 +128,12 @@ def IC_Thermal(L,k_scale,meffsquared,T0,N,flag_normalize = True):
     
     if NDIMS == 2:
         
-        noise = random.normal(size = (N, N)) + 1j*random.normal(size = (N,N))    
+        noise = random.normal(size = (N, N)) + 1j*random.normal(size = (N,N)) 
+        
+        if single_precision:
+            
+            noise = noise.astype('float32')
+        
         gfield1 = scipy.fft.ifft2(noise*amplitude).real
         gfield2 = scipy.fft.ifft2(noise*amplitude).imag
 
@@ -158,6 +163,11 @@ def IC_Thermal(L,k_scale,meffsquared,T0,N,flag_normalize = True):
     if NDIMS == 3:
         
         noise = random.normal(size = (N,N,N)) + 1j*random.normal(size = (N,N,N))
+        
+        if single_precision:
+            
+            noise = noise.astype('float32')
+            
         gfield1 = scipy.fft.ifftn(noise*amplitude).real
         gfield2 = scipy.fft.ifftn(noise*amplitude).imag
 
