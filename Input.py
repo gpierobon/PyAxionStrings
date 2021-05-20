@@ -1,6 +1,5 @@
 #=================================================================================================================
-# Input.py 
-# PyAxions (2021)
+#   Input.py - PyAxions (2021)
 #=================================================================================================================
 
 NDIMS = 3 # Spatial dimensions of the simulation box. Set NDIMS = 2 or 3
@@ -13,7 +12,7 @@ Delta = 1 # Default Delta=1 and H=fa
 DeltaRatio = 1.0/3.0 # Time/Space step ratio 
 Era = 1 # Era=1 for radiation domination, Era=2 for early matter domination (in PRS trick)
 StencilOrder = 2
-time_var = 'Conformal time' 
+time_var = 'String tension' # Options: 'String tension', 'Conformal time', 'Cosmic time', 'Scale factor' 
 
 #-----------------------------------------------------------------------------------------------------------------
 # SNAPSHOTS
@@ -35,5 +34,15 @@ analyse_spectrum = False
 analyse_energies = False
 
 string_checks = 40
-count_strings = True
 thr = 1 
+break_loop = False
+cores_final = 10
+
+#TODO: Spectrum stuff here 
+#......
+
+#-----------------------------------------------------------------------------------------------------------------
+# KATANA/CLUSTER RUN
+#-----------------------------------------------------------------------------------------------------------------
+
+array_job = False
