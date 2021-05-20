@@ -329,7 +329,34 @@ def Gradient(phi,dx):
     return dphi
 
 
+def PS(f,N,L):
+    y = fftn(f)
+    P = np.abs(y)**2
+    kfreq = fftfreq(N)*N 
+    
+    if NDIMS == 2:
 
+        kfreq2D = np.meshgrid(kfreq, kfreq)
+        K = np.sqrt(kfreq2D[0]**2 + kfreq2D[1]**2)
+        K = K.flatten()
+        P = P.flatten()
+        kbins = np.arange(0.5, N//2, 1.)
+        kvals = 0.5 * (kbins[1:] + kbins[:-1])
+        Pk, a, b = stats.binned_statistic(K, P, statistic = "mean", bins = kbins)
+        Pk *= pi * (kbins[1:]**2 - kbins[:-1]**2)
+
+    if NDIMS == 3:
+        
+        kfreq3D = np.meshgrid(kfreq, kfreq, kfreq)
+        K = np.sqrt(kfreq3D[0]**2 + kfreq3D[1]**2 + kfreq3D[2]**2) 
+        K = K.flatten()
+        P = P.flatten()
+        kbins = np.arange(0.5, N//2, 1.)
+        kvals = 0.5 * (kbins[1:] + kbins[:-1])
+        Pk, a, b = stats.binned_statistic(K, P, statistic = "mean", bins = kbins)
+        Pk *= 4/3 * np.pi * (kbins[1:]**3 - kbins[:-1]**3)
+    
+    return kvals*2*np.pi/L,Pk/(2*np.pi*L)**2
 
 
 
