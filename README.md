@@ -1,6 +1,6 @@
 # PyAxions
 
-Requirements
+Requirements:
 
 - NumPy
 - SciPy
