@@ -19,6 +19,9 @@ from StringID2 import Cores2D,Cores3D, PlaqSave,CoresAppend
 if analyse_strings:
     string_print = open('./Output/Strings/String_scaling.txt', 'w+')
 
+if analyse_spectrum:
+    spectrum_print = open('./Output/PS/Power_spectrum.txt', 'w+')
+
 if Potential == 'Mexican':
     phi1,phi2,phidot1,phidot2 = IC_Mexican(N)
 
@@ -64,26 +67,51 @@ for tstep in range(0,final_step):
                 time = t0*(R/R0*ms)**2.0     
                 num_cores = Cores2D(axion,thr)
                 xi = num_cores*time**2/(t_evol**2)
-                string_print.write('%f %f \n' % (time_x,xi))
-
+                if array_job:
+                    print(time_x,xi)
+                else:
+                    string_print.write('%f %f \n' % (time_x,xi))
+            
             if NDIMS ==3:
 
                 R = t_evol/(ms*L)
                 time = t0*(R/R0*ms)**2.0
                 num_cores = Cores3D(axion,thr)
                 xi = num_cores*time**2/(t_evol**3)
-                string_print.write('%f %f \n' % (time_x,xi))
+                if array_job:
+                    print(time_x,xi)
+                else:
+                    string_print.write('%f %f \n' % (time_x,xi))
 
     if analyse_spectrum:
 
         to_analsye = np.arange(0,final_step,number_checks)
-        PHI = phi1 + 1j * phi2
-        PHIDOT = phidot1 +1j * phidot2
-        axion = axionize(phi1,phi2)
+
+        if tstep in to_analsye:
+
+            PHI = phi1 + 1j * phi2
+            PHIDOT = phidot1 +1j * phidot2
+            axiondot = (PHIDOT/PHI).imag
+            adot_screen = saxion*axiondot
+            kvals, Abins = PS(adot_screen,N,L)
+
+    if break_loop:
+
+        if NDIMS ==2:
+            to_check = np.arange(int(final_step*0.8),final_step,3)
+            if tstep in to_check:
+                num_cores = Cores2D(axion,thr)
+                if num_cores == cores_final:
+                    break
+
+
 
 
 if analyse_strings:
     string_print.close()
+
+if analyse_spectrum:
+
 
 #------------------------------------------------------------------------------
 # FINAL RESULT 
