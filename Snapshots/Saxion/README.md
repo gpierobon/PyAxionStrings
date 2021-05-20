@@ -1,5 +1,4 @@
-# PyAxions 
-## Saxion field snapshots
+# PyAxions - Saxion field snapshots
 
 This folder is the default location for saved snaphsots. 
 
