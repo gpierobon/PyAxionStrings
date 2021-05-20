@@ -17,7 +17,7 @@ import numpy as np
 import random
 
 from Input import NDIMS,N
-from StringID import CoresAppend, PlaqSave
+from StringID2 import CoresAppend, PlaqSave
 
 mov_dir_ax = './Snapshots/Axion/' 
 mov_dir_sax = './Snapshots/Saxion/' 
@@ -232,7 +232,7 @@ def HistoSnapshot(s,index):
 
 def Print_Snapshots2D(f_axion = True, f_saxion = False, f_double = False, f_3dstrings = False):
     
-    from MainPQ import axion,saxion,t_evol,tstep
+    from MainPQ2 import axion,saxion,t_evol,tstep
     if f_axion:
 
         fig1, ax1 = AxionSnapshot(NDIMS,axion,z_slice,t_evol)
