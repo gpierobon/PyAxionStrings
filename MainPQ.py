@@ -1,4 +1,4 @@
-from numpy import *
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import pandas as pd
@@ -32,26 +32,12 @@ if Potential == 'Thermal':
 K1 = Laplacian(phi1,dx) + Potential1(phi1,phi2,phidot1,t_evol)
 K2 = Laplacian(phi2,dx) + Potential2(phi1,phi2,phidot2,t_evol)
 
+#--------------------------------------------------------------------------------------------------------------------------------------------------
+
 for tstep in range(0,final_step):
-    
-    phi1 = PhiSum(phi1,phidot1,K1,dtau)
-    phi2 = PhiSum(phi2,phidot2,K2,dtau)
 
-    t_evol = t_evol + dtau
+    phi1,phi2,phidot1,phidot2,K1,K2,t_evol = Evolve(phi1,phi2,phidot1,phidot2,K1,K2,t_evol,dtau)
 
-    K1_next = Laplacian(phi1,dx) + Potential1(phi1,phi2,phidot1,t_evol)
-    K2_next = Laplacian(phi2,dx) + Potential2(phi1,phi2,phidot2,t_evol)
-
-    phidot1 = PhidotSum(phidot1,K1,K1_next,dtau)
-    phidot2 = PhidotSum(phidot2,K2,K2_next,dtau)
-
-    K1 = 1.0*K1_next
-    K2 = 1.0*K2_next
-
-    #------------------------------------------------------------------------------
-    # ANALYSIS 
-    #------------------------------------------------------------------------------
-    
     if analyse_strings: 
         
         to_analsye = np.arange(0,final_step,string_checks)
@@ -85,37 +71,33 @@ for tstep in range(0,final_step):
 
     if analyse_spectrum:
 
-        to_analsye = np.arange(0,final_step,number_checks)
+        #to_analsye = np.arange(0,final_step,number_checks)
 
-        if tstep in to_analsye:
+        #if tstep in to_analyse:
+        if tstep == 55:
 
             PHI = phi1 + 1j * phi2
             PHIDOT = phidot1 +1j * phidot2
+            saxion = saxionize(phi1,phi2)
             axiondot = (PHIDOT/PHI).imag
             adot_screen = saxion*axiondot
-            kvals, Abins = PS(adot_screen,N,L)
+            # INTEGRATE WITH INPUT FILE 
+            kvals, Abins = PS(adot_screen,N,L) 
+            for a,b in zip(kvals,Abins):
+                spectrum_print.write("%f %f  \n"% (a,b))
 
     if break_loop:
-
-        if NDIMS ==2:
-            to_check = np.arange(int(final_step*0.8),final_step,3)
-            if tstep in to_check:
-                num_cores = Cores2D(axion,thr)
-                if num_cores == cores_final:
-                    break
-
-
+        if tstep == break_step:
+            break
 
 
 if analyse_strings:
     string_print.close()
 
 if analyse_spectrum:
+    spectrum_print.close()
 
-
-#------------------------------------------------------------------------------
-# FINAL RESULT 
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------
 
 if print_snapshot_final:
     axion = axionize(phi1,phi2)
