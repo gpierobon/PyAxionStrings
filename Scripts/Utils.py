@@ -329,6 +329,27 @@ def Gradient(phi,dx):
     return dphi
 
 
+
+@njit(parallel=True)
+def Evolve(phi1,phi2,phidot1,phidot2,K1,K2,t_evol,dtau):
+
+    phi1 = PhiSum(phi1,phidot1,K1,dtau)
+    phi2 = PhiSum(phi2,phidot2,K2,dtau)
+
+    t_evol = t_evol + dtau
+
+    K1_next = Laplacian(phi1,dx) + Potential1(phi1,phi2,phidot1,t_evol)
+    K2_next = Laplacian(phi2,dx) + Potential2(phi1,phi2,phidot2,t_evol)
+
+    phidot1 = PhidotSum(phidot1,K1,K1_next,dtau)
+    phidot2 = PhidotSum(phidot2,K2,K2_next,dtau)
+
+    K1 = 1.0*K1_next
+    K2 = 1.0*K2_next
+
+    return phi1,phi2,phidot1,phidot2,K1,K2,t_evol
+
+
 def PS(f,N,L):
     y = fftn(f)
     P = np.abs(y)**2
