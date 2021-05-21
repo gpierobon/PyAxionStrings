@@ -47,7 +47,16 @@ for tstep in range(0,final_step):
 
 # Continue here ... 
 
+# Scale th ebox in QCD units
 
+L = L_QCD
+t_evol = ti_QCD
+lambaPRS = lambaPRS_QCD 
+
+for tstep in range(0,final_step):
+
+    # Check Evolve_QCD in Scripts/Utils.py
+    phi1,phi2,phidot1,phidot2,K1,K2,t_evol = Evolve_QCD(phi1,phi2,phidot1,phidot2,K1,K2,t_evol,dtau)
 
 
 
