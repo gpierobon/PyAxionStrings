@@ -111,16 +111,28 @@ def IC_Mexican(N,single_precision = False):
 # ===================================================================
 
 def fftind(N):
-    k_ind = np.mgrid[:N, :N] - int( (N + 1)/2 )
-    k_ind = scipy.fftpack.fftshift(k_ind)
+    
+    if NDIMS ==2:
+        k_ind = np.mgrid[:N, :N] - int( (N + 1)/2 )
+        k_ind = scipy.fftpack.fftshift(k_ind)
+        
+    if NDIMS == 3:
+        k_ind = np.mgrid[:N, :N, :N] - int( (N + 1)/2 )
+        k_ind = scipy.fftpack.fftshift(k_ind)
+        
     return(k_ind)
 
 
 def IC_Thermal(L,k_scale,meffsquared,T0,N,flag_normalize = True):
     
     k_idx = fftind(N)
-
-    k = np.sqrt(k_idx[0]**2 + k_idx[1]**2+1e-10)
+    
+    if NDIMS ==2:
+        k = np.sqrt(k_idx[0]**2 + k_idx[1]**2+1e-10)
+        
+    if NDIMS == 3:
+        k = np.sqrt(k_idx[0]**2 + k_idx[1]**2+k_idx[2]**2 + 1e-10)
+        
     omegak = np.sqrt((k*np.pi/N)**2 + meffsquared)
     bose = 1/(np.exp(omegak/T0)-1)
     amplitude = np.sqrt(L*bose/omegak) # Power spectrum for phi
