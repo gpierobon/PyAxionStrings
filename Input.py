@@ -52,7 +52,8 @@ cores_final = 10 # This is for 2D, missign 3D implementation
 L_QCD = 6 
 ti_QCD = 0.4
 n = 2  # Ref. values: QCD lattice n=6.68, QCD generic n=7, QCD beta function n=8. ALPS: n=2,4,6,8,10,...  
-#t_critical = # Axion mass reaching zero T value 
+#t_critical = # Axion mass reaching zero T value
+ms = N/L # To maintain the string core resolution as one plaquette 
 lambdaPRS_QCD = 1000 # Check Buschmann et al, Vaquero et al. 
 
 
