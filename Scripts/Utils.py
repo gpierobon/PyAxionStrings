@@ -110,16 +110,38 @@ def IC_Mexican(N,single_precision = False):
 # INITIAL CONDITIONS - THERMAL POTENTIAL
 # ===================================================================
 
+@njit(parallel=True)
+def generate_ks(N):
+    if NDIMS == 2:
+        kx = np.arange(-N/2,N/2)
+        ky = np.arange(-N/2,N/2)
+        k = np.zeros((N,N))
+        for i in prange(N):
+            for j in prange(N):
+                    k[i,j] = np.sqrt(kx[i]**2 + ky[j]**2 + 1e-10)
+    elif NDIMS == 3:
+        kx = np.arange(-N/2,N/2)
+        ky = np.arange(-N/2,N/2)
+        kz = np.arange(-N/2,N/2)
+        k = np.zeros((N,N,N))
+        for i in prange(N):
+            for j in prange(N):
+                for l in prange(N):
+                    k[i,j,l] = np.sqrt(kx[i]**2 + ky[j]**2 + kz[l]**2 + 1e-10)
+    return k
+
+
 def fftind(N):
-        k_ind = np.mgrid[:N, :N] - int( (N + 1)/2 )
-        k_ind = scipy.fftpack.fftshift(k_ind)
+    k_ind = np.mgrid[:N, :N] - int( (N + 1)/2 )
+    k_ind = scipy.fftpack.fftshift(k_ind)
     return(k_ind)
 
 
 def IC_Thermal(L,k_scale,meffsquared,T0,N,flag_normalize = True):
     
-    k_idx = fftind(N)
-    k = np.sqrt(k_idx[0]**2 + k_idx[1]**2+1e-10)
+    # k_idx = fftind(N)
+    # k = np.sqrt(k_idx[0]**2 + k_idx[1]**2+1e-10)
+    k = generate_ks(N)
     omegak = np.sqrt((k*np.pi/N)**2 + meffsquared)
     bose = 1/(np.exp(omegak/T0)-1)
     amplitude = np.sqrt(L*bose/omegak) # Power spectrum for phi
@@ -133,8 +155,11 @@ def IC_Thermal(L,k_scale,meffsquared,T0,N,flag_normalize = True):
             
             noise = noise.astype('float32')
         
-        gfield1 = scipy.fft.ifft2(noise*amplitude).real
-        gfield2 = scipy.fft.ifft2(noise*amplitude).imag
+        gfield_k = noise * amplitude
+        gfield_k = scipy.fftpack.fftshift(gfield_k)
+        
+        gfield1 = scipy.fft.ifft2(gfield_k).real
+        gfield2 = scipy.fft.ifft2(gfield_k).imag
 
         if flag_normalize:
 
@@ -145,9 +170,12 @@ def IC_Thermal(L,k_scale,meffsquared,T0,N,flag_normalize = True):
 
             gfield2 = gfield2 - np.mean(gfield2)
             gfield2 = gfield2/np.std(gfield2)
-          
-        gfield1_dot = scipy.fft.ifft2(noise*amplitude_dot).real
-        gfield2_dot = scipy.fft.ifft2(noise*amplitude_dot).imag
+        
+        gfield_dot_k = noise * amplitude_dot
+        gfield_dot_k = scipy.fftpack.fftshift(gfield_dot_k)
+
+        gfield1_dot = scipy.fft.ifft2(gfield_dot_k).real
+        gfield2_dot = scipy.fft.ifft2(gfield_dot_k).imag
 
         if flag_normalize:
             
@@ -166,9 +194,12 @@ def IC_Thermal(L,k_scale,meffsquared,T0,N,flag_normalize = True):
         if single_precision:
             
             noise = noise.astype('float32')
-            
-        gfield1 = scipy.fft.ifftn(noise*amplitude).real
-        gfield2 = scipy.fft.ifftn(noise*amplitude).imag
+
+        gfield_k = noise * amplitude
+        gfield_k = scipy.fftpack.fftshift(gfield_k)
+
+        gfield1 = scipy.fft.ifftn(gfield_k).real
+        gfield2 = scipy.fft.ifftn(gfield_k).imag
 
         if flag_normalize:
 
@@ -180,9 +211,11 @@ def IC_Thermal(L,k_scale,meffsquared,T0,N,flag_normalize = True):
             gfield2 = gfield2 - np.mean(gfield2)
             gfield2 = gfield2/np.std(gfield2)
 
-           
-        gfield1_dot = scipy.fft.ifftn(noise*amplitude_dot).real
-        gfield2_dot = scipy.fft.ifftn(noise*amplitude_dot).imag
+        gfield_dot_k = noise * amplitude_dot
+        gfield_dot_k = scipy.fftpack.fftshift(gfield_dot_k)
+
+        gfield1_dot = scipy.fft.ifftn(gfield_dot_k).real
+        gfield2_dot = scipy.fft.ifftn(gfield_dot_k).imag
 
         if flag_normalize:
             
